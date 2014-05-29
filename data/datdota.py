@@ -22,7 +22,7 @@ def _parse_results_from_past_matches(text):
     for row in rows[1:]:
         data = row.find_all("td")
         parsed_data = [datum.text for datum in data]
-        
+
         formatted_data = dict(zip(parsed_headers, parsed_data))
 
         results.append(formatted_data)
@@ -71,12 +71,12 @@ def _parse_results_from_upcoming_matches(text):
 
 
 def get_past_matches(how_many_500_matches):
-    result = []
+    results = []
     for n in range(how_many_500_matches):
         data_page = _get_past_matches_page(500*n)
         data = _parse_results_from_past_matches(data_page.text)
-        result.extend(data)
-
+        results.extend(data)
+    return results
 
 def get_upcoming_matches():
     upcoming_page = _get_upcoming_matches_page()
