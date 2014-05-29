@@ -1,6 +1,10 @@
+import datetime
+
 import requests
 import bs4
-import pdb
+
+import insert_data
+
 
 def _get_past_matches_page(records_back=0):
     params = {"l0": records_back}
@@ -27,21 +31,25 @@ def _parse_results_from_past_matches(text):
 
         results.append(formatted_data)
 
-    _set_team_scores(results)
+    _format_fields(results)
 
     return results
 
 
-def _set_team_scores(results):
+def _format_fields(results):
     for datum in results:
         score = datum.pop("score")
         radiant_score, dire_score = [int(team_score.strip()) for team_score in score.split("-")]
         datum[u"radiant_score"] = radiant_score
         datum[u"dire_score"] = dire_score
 
+        datum["date"] = datetime.datetime.strptime(datum["date"], "%m/%d/%y")
 
-def save_data(data):
-    pass
+
+def save_results(results):
+    session = insert_data.get_session()
+    for result in results:
+        insert_data.insert_match(session, result)
 
 
 def _get_upcoming_matches_page():
@@ -79,6 +87,7 @@ def get_past_matches(how_many_500_matches):
     pdb.set_trace()
     return results
 
+
 def get_upcoming_matches():
     upcoming_page = _get_upcoming_matches_page()
     results = _parse_results_from_upcoming_matches(upcoming_page.text)
@@ -87,7 +96,4 @@ def get_upcoming_matches():
 
 if __name__ == "__main__":
     past_matches = get_past_matches(1)
-    save_data(past_matches)
-
-    upcoming_matches = get_upcoming_matches()
-    save_data(upcoming_matches)
+    save_results(past_matches)
