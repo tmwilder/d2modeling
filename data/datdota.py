@@ -1,6 +1,6 @@
 import requests
 import bs4
-
+import pdb
 
 def _get_past_matches_page(records_back=0):
     params = {"l0": records_back}
@@ -76,6 +76,7 @@ def get_past_matches(how_many_500_matches):
         data_page = _get_past_matches_page(500*n)
         data = _parse_results_from_past_matches(data_page.text)
         results.extend(data)
+    pdb.set_trace()
     return results
 
 def get_upcoming_matches():
