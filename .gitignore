@@ -1,0 +1,5 @@
+#Sublime
+*.sublime-workspace*
+
+#Python build files
+*.pyc
