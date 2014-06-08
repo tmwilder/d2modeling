@@ -1,11 +1,10 @@
-from sqlalchemy import create_engine
-from d2modeling.schema import Base
+import os
+from d2modeling.schema import Base, engine, DB_NAME
 
-import argparse
-parser = argparse.ArgumentParser()
-parser.add_argument('dbpath', help='Path at which you want to instantiate the db', default='sqlite:///d2modeling.db')
-args = parser.parse_args()
+if DB_NAME.split(':')[0] == 'sqlite':
+    try:
+        os.remove(DB_NAME.split('/', 3)[-1])
+    except OSError:
+        pass
 
-engine = create_engine(args.dbpath)
 Base.metadata.create_all(engine)
-

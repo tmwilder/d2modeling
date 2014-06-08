@@ -1,14 +1,18 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, Date
+from sqlalchemy import Column, ForeignKey, Integer, String, Date, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+from sqlalchemy import create_engine
+from os.path import expanduser
 
 Base = declarative_base()
-DB_NAME = 'sqlite:///d2modeling.db'
+DB_NAME = 'sqlite:///{0}/d2modeling.db'.format(expanduser('~'))
+DB_NAME = 'sqlite:////tmp/d2modeling.db'.format(expanduser('~'))
+engine = create_engine(DB_NAME)
+Base.metadata.bind = engine
 
 class Team(Base):
     __tablename__ = 'team'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(250), nullable=False)
+    name = Column(String(250), primary_key=True)
 
 
 class Match(Base):
@@ -17,11 +21,11 @@ class Match(Base):
     id = Column(Integer, primary_key=True)
     dire_score = Column(Integer)
     radiant_score = Column(Integer)
-    time = Column(String(250))
+    time = Column(Float)
     date = Column(Date)
     winner = Column(String(250))
-    dire_id = Column(Integer, ForeignKey('team.id'))
-    radiant_id = Column(Integer, ForeignKey('team.id'))
+    dire_name = Column(String(250), ForeignKey('team.name'))
+    radiant_name = Column(String(250), ForeignKey('team.name'))
 
-    radiant = relationship("Team", foreign_keys=[radiant_id])
-    dire = relationship("Team", foreign_keys=[dire_id])
+    radiant = relationship("Team", foreign_keys=[radiant_name])
+    dire = relationship("Team", foreign_keys=[dire_name])
