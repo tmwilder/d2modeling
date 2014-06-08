@@ -1,5 +1,5 @@
 import sqlite3
-from os.path import expanduser, abspath as ap, dirname as dn
+from os.path import abspath as ap, dirname as dn
 
 from sqlalchemy import Column, ForeignKey, Integer, String, Date, Float
 from sqlalchemy.ext.declarative import declarative_base
