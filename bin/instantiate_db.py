@@ -1,9 +1,9 @@
 import os
-from d2modeling.schema import Base, engine, DB_NAME
+from d2modeling.schema import Base, engine, DB_NAME, DB_PATH
 
 if DB_NAME.split(':')[0] == 'sqlite':
     try:
-        os.remove(DB_NAME.split('/', 3)[-1])
+        os.remove(DB_PATH)
     except OSError:
         pass
 
