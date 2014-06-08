@@ -1,4 +1,7 @@
-For Justin:
+### Quickstart
+
+pip install -e /path/to/root/d2modeling
+
 
 To get going:
     cd data && python schema.py && python datdota.py

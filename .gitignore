@@ -3,6 +3,16 @@
 
 #Python build files
 *.pyc
+*.egg-info
+*.egg
+dist
+build
 
 #DB Files
 *.db
+
+#gedit backup files
+*~
+
+#difftool backup files
+*.orig

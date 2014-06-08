@@ -1,8 +1,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
- 
+
 from schema import Team, Base, Match, DB_NAME
- 
+
 
 def get_session():
     engine = create_engine(DB_NAME)
