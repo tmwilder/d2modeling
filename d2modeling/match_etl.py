@@ -5,6 +5,7 @@ from d2modeling.schema import Team, Match
 from d2modeling import SessionFactory
 from sqlalchemy.exc import IntegrityError
 
+
 def extract_matches(num_matches_to_read):
     results = []
     while len(results) < num_matches_to_read:
