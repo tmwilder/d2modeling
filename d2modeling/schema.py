@@ -1,4 +1,3 @@
-import sqlite3
 from os.path import abspath as ap, dirname as dn
 
 from sqlalchemy import Column, ForeignKey, Integer, String, Date, Float
@@ -32,13 +31,3 @@ class Match(Base):
 
     radiant = relationship("Team", foreign_keys=[radiant_name])
     dire = relationship("Team", foreign_keys=[dire_name])
-
-
-def get_dbapi2_conn():
-    """ Gets a connection to the current sqlite database.
-        Used to extract data with raw SQL.
-        We lose the ability to freely transition engines by using SQL directly.
-        We save time.
-    """
-    conn = sqlite3.connect(DB_PATH)
-    return conn

@@ -1,6 +1,5 @@
 import d2modeling.features as features
 from d2modeling.feature_classes import FeatureSet
-from d2modeling.schema import get_dbapi2_conn
 
 
 class PercentageFeatureSet(FeatureSet):
@@ -21,7 +20,7 @@ class PercentageFeatureSet(FeatureSet):
 
 
 if __name__ == "__main__":
-    # Example use. 
+    # Example use.
     feature_set = PercentageFeatureSet(team_1="NaVi", team_2="EG")
     import pprint
     pprint.pprint(feature_set.as_dict())

@@ -1,5 +1,5 @@
 from d2modeling.feature_classes import Feature, FeatureSet
-from d2modeling.schema import get_dbapi2_conn
+from d2modeling import get_dbapi2_conn
 
 
 class LastNMatchesFeature(Feature):
