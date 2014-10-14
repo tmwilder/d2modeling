@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
+
 class Feature:
     """ Base class to represent single interface for storing
         and accessing one feature in memory.
@@ -33,7 +34,7 @@ class FeatureSet:
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def __init__(self, team_1, team_2):
+    def __init__(self, team_1, team_2, conn):
         # Subclasses define self.features in their constructors.
         for feature in self.features:
             assert(isinstance(feature, Feature))

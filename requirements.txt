@@ -4,3 +4,4 @@ beautifulsoup4==4.3.2
 distribute==0.6.24
 requests==2.3.0
 wsgiref==0.1.2
+nose

@@ -5,6 +5,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
 
+
 Base = declarative_base()
 DB_PATH = '{0}/d2modeling.db'.format(dn(dn(ap(__file__))))
 DB_NAME = 'sqlite:///{0}'.format(DB_PATH)

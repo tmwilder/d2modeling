@@ -14,11 +14,13 @@ def extract_matches(num_matches_to_read):
         results.extend(data)
     return results
 
+
 def _read_match_html(records_back):
     params = {"l0": records_back}
     url = "http://www.datdota.com/matches.php"
     res = requests.get(url, params=params)
     return res
+
 
 def _extract_match_data(match_page_html):
     doc = bs4.BeautifulSoup(match_page_html)
@@ -34,6 +36,7 @@ def _extract_match_data(match_page_html):
         results.append(formatted_data)
     return results
 
+
 def transform_matches(raw_match_data):
     for datum in raw_match_data:
         score = datum.pop("score")
@@ -45,11 +48,13 @@ def transform_matches(raw_match_data):
         datum["date"] = datetime.datetime.strptime(datum["date"], "%m/%d/%y")
     return raw_match_data
 
+
 def load_matches(transformed_matches):
     session = SessionFactory()
     for match in transformed_matches:
         load_match(session, match)
     session.close()
+
 
 def load_match(session, match):
     try:

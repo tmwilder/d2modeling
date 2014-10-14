@@ -4,11 +4,12 @@ from d2modeling import get_dbapi2_conn
 
 class LastNMatchesFeature(Feature):
 
-    def _construct(self, team_name, n_matches):
-        self._load_matches(team_name, n_matches)
+    def _construct(self, team_name, n_matches, conn=None):
+        self._load_matches(team_name, n_matches, conn)
 
-    def _load_matches(self, team_name, n_matches):
-        conn = get_dbapi2_conn()
+    def _load_matches(self, team_name, n_matches, conn=None):
+        if conn is None:
+            conn = get_dbapi2_conn()
         cursor = conn.cursor()
         sql = (
         "SELECT "
@@ -20,7 +21,7 @@ class LastNMatchesFeature(Feature):
             "radiant_name = ? "
         "ORDER BY "
             "date desc "
-        "LIMIT"
+        "LIMIT "
             "? "
         )
         data = (team_name, team_name, n_matches)
@@ -41,8 +42,8 @@ class LastNMatchesFeature(Feature):
 
 
 class MatchWinLossPercentage(LastNMatchesFeature):
-    def _construct(self, team_name, n_matches):
-        super(MatchWinLossPercentage, self)._construct(team_name, n_matches)
+    def _construct(self, team_name, n_matches, conn=None):
+        super(MatchWinLossPercentage, self)._construct(team_name, n_matches, conn)
 
         wins = 0
         losses = 0
@@ -62,3 +63,18 @@ class MatchWinLossPercentage(LastNMatchesFeature):
         # If we run into memory problems, we can call del self.matches here. Not doing now for debug reasons.
         return percentage
 
+
+class DefaultFeatureSet(FeatureSet):
+    def __init__(self, team_1, team_2, conn):
+        self.features = []
+
+        for team_name in (team_1, team_2):
+            for x in range(5, 16, 5):
+                f = MatchWinLossPercentage(
+                    name='last_{}_matches_team_{}'.format(x, team_name),
+                    team_name=team_name,
+                    n_matches=x,
+                    conn=conn
+                )
+                self.features.append(f)
+        super(DefaultFeatureSet, self).__init__(team_1, team_2, conn)
