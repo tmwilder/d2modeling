@@ -1,4 +1,5 @@
 import datetime
+import pprint
 import requests
 import bs4
 from d2modeling.schema import Team, Match
@@ -7,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 
 
 def extract_matches(num_matches_to_read):
+    print("Starting to ingest match data. Fetching {} matches...".format(num_matches_to_read))
     results = []
     while len(results) < num_matches_to_read:
         data_page = _read_match_html(len(results))
@@ -18,11 +20,13 @@ def extract_matches(num_matches_to_read):
 def _read_match_html(records_back):
     params = {"l0": records_back}
     url = "http://www.datdota.com/matches.php"
+    print("Fetching match page at: {}...".format(url))
     res = requests.get(url, params=params)
     return res
 
 
 def _extract_match_data(match_page_html):
+    print("Extracting data from fetched match page...")
     doc = bs4.BeautifulSoup(match_page_html)
     table = doc.find_all("table")[0]
     rows = table.find_all("tr")
@@ -38,6 +42,7 @@ def _extract_match_data(match_page_html):
 
 
 def transform_matches(raw_match_data):
+    print("Transforming raw match data to final form...")
     for datum in raw_match_data:
         score = datum.pop("score")
         radiant_score, dire_score = [int(team_score.strip()) for team_score in score.split("-")]
@@ -50,13 +55,19 @@ def transform_matches(raw_match_data):
 
 
 def load_matches(transformed_matches):
+    print("Loading {} matches...".format(len(transformed_matches)))
     session = SessionFactory()
-    for match in transformed_matches:
-        load_match(session, match)
+    for count, match in enumerate(transformed_matches):
+        load_match(session, match, count+1)
     session.close()
 
 
-def load_match(session, match):
+def load_match(session, match, count=None):
+    if count is not None:
+        message = "Adding match #{} with match id {}".format(count, pprint.pformat(match["match"]))
+    else:
+        message = "Adding match with match id {}".format(pprint.pformat(match["match"]))
+    print(message)
     try:
         session.add(Team(name=match['radiant']))
         session.commit()

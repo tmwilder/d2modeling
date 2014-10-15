@@ -30,6 +30,17 @@ class LastNMatchesFeature(Feature):
         self.matches = [get_match_row_dict(row) for row in rows]
 
 
+class CurrentTeamElo(Feature):
+    def _construct(self, team_name, conn=None):
+        if conn is None:
+            conn = get_dbapi2_conn()
+        cursor = conn.cursor()
+        elo_query = "select elo from team where name = ?"
+        cursor.execute(elo_query, (team_name,))
+        elo = cursor.fetchall()[0][0]
+        return elo
+
+
 class MatchWinLossPercentage(LastNMatchesFeature):
     def _construct(self, team_name, n_matches, conn=None):
         super(MatchWinLossPercentage, self)._construct(team_name, n_matches, conn)
@@ -100,6 +111,12 @@ class DefaultFeatureSet(FeatureSet):
         self.features = []
 
         for team_name in (team_1, team_2):
+            elo = CurrentTeamElo(
+                "team_{}_elo".format(team_name),
+                team_name=team_name
+            )
+            self.features.append(elo)
+
             for x in range(5, 41, 5):
                 wlp = MatchWinLossPercentage(
                     name='win_percentage_last_{}_team_{}'.format(x, team_name),

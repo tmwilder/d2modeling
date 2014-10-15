@@ -3,6 +3,7 @@ import string
 
 import d2modeling.features as features
 import test.utils as utils
+import d2modeling.elo as elo
 
 
 class TestFeatures(utils.DatabaseTest, unittest.TestCase):
@@ -50,6 +51,34 @@ class TestFeatures(utils.DatabaseTest, unittest.TestCase):
             actual.append(n_matches.as_tuple())
         self.assertEqual(expected, actual)
 
+    def test_CurrentTeamElo(self):
+        utils.populate(session=self.session, team_names=list(string.lowercase))
+        self.transaction.commit()
+        elo_a = features.CurrentTeamElo(
+            name="team_{}_elo".format("a"),
+            team_name="a",
+            conn=self.db_api_2_conn
+        )
+        elo_b = features.CurrentTeamElo(
+            name="team_{}_elo".format("b"),
+            team_name="b",
+            conn=self.db_api_2_conn
+        )
+        self.assertEqual((elo_a.as_value(), elo_b.as_value()), (1200, 1200))
+        elo.update_all(conn=self.db_api_2_conn)
+        
+        elo_a2 = features.CurrentTeamElo(
+            name="team_{}_elo".format("a"),
+            team_name="a",
+            conn=self.db_api_2_conn
+        )
+        elo_b2 = features.CurrentTeamElo(
+            name="team_{}_elo".format("b"),
+            team_name="b",
+            conn=self.db_api_2_conn
+        )
+        self.assertEqual((elo_a2.as_value(), elo_b2.as_value()), (1109.0, 1426.0))
+
     def test_AverageGameDuration(self):
         utils.populate(session=self.session, team_names=list(string.lowercase))
         self.transaction.commit()
@@ -72,14 +101,15 @@ class TestFeatures(utils.DatabaseTest, unittest.TestCase):
             actual.append(n_matches.as_tuple())
         self.assertEqual(expected, actual)
 
-
     def test_DefaultFeatureSet(self):
         utils.populate(session=self.session, team_names=list(string.lowercase))
         self.transaction.commit()
         feature_set = features.DefaultFeatureSet(team_1="a", team_2="b", conn=self.db_api_2_conn)
         
-        result = feature_set.as_dict()
-        self.assertEqual(len(result.keys()), 48)
+        self.assertEqual(len(feature_set.as_dict().keys()), 50)
+        self.assertEqual(type(feature_set.as_dict()), dict)
+        self.assertEqual(type(feature_set.as_values()), list)
+        self.assertEqual(len(feature_set.as_values()), 50)
 
 
 if __name__ == "__main__":
