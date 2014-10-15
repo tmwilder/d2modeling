@@ -1,6 +1,4 @@
 import unittest
-import os.path as op
-import os
 import string
 
 import d2modeling.features as features

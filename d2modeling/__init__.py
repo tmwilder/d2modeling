@@ -5,6 +5,7 @@ SessionFactory = sessionmaker(bind=engine)
 
 import sqlite3
 
+
 def get_dbapi2_conn(path=DB_PATH):
     """ Gets a connection to the current sqlite database.
         Used to extract data with raw SQL.

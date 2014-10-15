@@ -1,9 +1,9 @@
 from d2modeling.feature_classes import Feature, FeatureSet
+from d2modeling.utils import get_match_row_dict
 from d2modeling import get_dbapi2_conn
 
 
 class LastNMatchesFeature(Feature):
-
     def _construct(self, team_name, n_matches, conn=None):
         self._load_matches(team_name, n_matches, conn)
 
@@ -27,18 +27,7 @@ class LastNMatchesFeature(Feature):
         data = (team_name, team_name, n_matches)
         cursor.execute(sql, data)
         rows = cursor.fetchall()
-        self.matches = [self._get_row_dict(row) for row in rows]
-
-    def _get_row_dict(self, row):
-        return {
-            "dire_score": row[0],
-            "radiant_score": row[1],
-            "time": row[2],
-            "date": row[3],
-            "winner": row[4],
-            "dire_name": row[5],
-            "radiant_name": row[6]
-        }
+        self.matches = [get_match_row_dict(row) for row in rows]
 
 
 class MatchWinLossPercentage(LastNMatchesFeature):

@@ -16,6 +16,7 @@ Base.metadata.bind = engine
 class Team(Base):
     __tablename__ = 'team'
     name = Column(String(250), primary_key=True)
+    elo = Column(Float, default=1200)
 
 
 class Match(Base):
