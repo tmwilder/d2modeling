@@ -30,7 +30,7 @@ class TestFeatures(utils.DatabaseTest, unittest.TestCase):
             actual.append(n_matches.as_tuple())
         self.assertEqual(expected, actual)
 
-    def test_ScoreDifferential(self):
+    def test_KillPercentage(self):
         utils.populate(session=self.session, team_names=list(string.lowercase))
         self.transaction.commit()
         expected = [
@@ -52,13 +52,36 @@ class TestFeatures(utils.DatabaseTest, unittest.TestCase):
             actual.append(n_matches.as_tuple())
         self.assertEqual(expected, actual)
 
+    def test_AverageGameDuration(self):
+        utils.populate(session=self.session, team_names=list(string.lowercase))
+        self.transaction.commit()
+        expected = [
+            ('5_matches', 393.72798590178974),
+            ('10_matches', 581.896094004632),
+            ('15_matches', 540.990399493227),
+            ('20_matches', 522.1112682721316),
+            ('25_matches', 527.9481123225119),
+            ('30_matches', 490.14676167079955)
+        ]
+        actual = []
+        for x in range(5, 31, 5):
+            n_matches = features.AverageGameDuration(
+                name="{}_matches".format(x),
+                team_name="a",
+                n_matches=x,
+                conn=self.db_api_2_conn
+            )
+            actual.append(n_matches.as_tuple())
+        self.assertEqual(expected, actual)
+
+
     def test_DefaultFeatureSet(self):
         utils.populate(session=self.session, team_names=list(string.lowercase))
         self.transaction.commit()
         feature_set = features.DefaultFeatureSet(team_1="a", team_2="b", conn=self.db_api_2_conn)
         
         result = feature_set.as_dict()
-        self.assertEqual(len(result.keys()), 32)
+        self.assertEqual(len(result.keys()), 48)
 
 
 if __name__ == "__main__":

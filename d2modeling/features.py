@@ -93,6 +93,19 @@ class KillPercentage(LastNMatchesFeature):
         return kills_over_kill_deaths
 
 
+class AverageGameDuration(LastNMatchesFeature):
+    def _construct(self, team_name, n_matches, conn=None):
+        super(AverageGameDuration, self)._construct(team_name, n_matches, conn)
+
+        matches = len(self.matches)
+        time = 0.0
+
+        for match in self.matches:
+            time += match["time"]
+
+        return  time/matches
+
+
 class DefaultFeatureSet(FeatureSet):
     def __init__(self, team_1, team_2, conn):
         self.features = []
@@ -114,5 +127,13 @@ class DefaultFeatureSet(FeatureSet):
                     conn=conn
                 )
                 self.features.append(kp)
+
+                agd = AverageGameDuration(
+                    name='average_game_duration_last_{}_team_{}'.format(x, team_name),
+                    team_name=team_name,
+                    n_matches=x,
+                    conn=conn
+                )
+                self.features.append(agd)
 
         super(DefaultFeatureSet, self).__init__(team_1, team_2, conn)
