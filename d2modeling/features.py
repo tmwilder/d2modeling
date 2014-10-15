@@ -64,17 +64,55 @@ class MatchWinLossPercentage(LastNMatchesFeature):
         return percentage
 
 
+class KillPercentage(LastNMatchesFeature):
+    def _construct(self, team_name, n_matches, conn=None):
+        super(KillPercentage, self)._construct(team_name, n_matches, conn)
+
+        kills = 0
+        deaths = 0
+
+        for match in self.matches:
+            radiant_score = match["radiant_score"]
+            radiant_name = match["radiant_name"]
+
+            dire_score = match["dire_score"]
+            dire_name = match["dire_name"]
+
+            if team_name == "dire_name":
+                kills += dire_score
+                deaths += radiant_score
+            else:
+                kills += radiant_score
+                deaths += dire_score
+
+        if kills + deaths == 0:
+            kills_over_kill_deaths = 1
+        else:
+            kills_over_kill_deaths = float(kills)/(kills + deaths)
+
+        return kills_over_kill_deaths
+
+
 class DefaultFeatureSet(FeatureSet):
     def __init__(self, team_1, team_2, conn):
         self.features = []
 
         for team_name in (team_1, team_2):
-            for x in range(5, 16, 5):
-                f = MatchWinLossPercentage(
-                    name='last_{}_matches_team_{}'.format(x, team_name),
+            for x in range(5, 41, 5):
+                wlp = MatchWinLossPercentage(
+                    name='win_percentage_last_{}_team_{}'.format(x, team_name),
                     team_name=team_name,
                     n_matches=x,
                     conn=conn
                 )
-                self.features.append(f)
+                self.features.append(wlp)
+
+                kp = KillPercentage(
+                    name='kill_percentage_last_{}_team_{}'.format(x, team_name),
+                    team_name=team_name,
+                    n_matches=x,
+                    conn=conn
+                )
+                self.features.append(kp)
+
         super(DefaultFeatureSet, self).__init__(team_1, team_2, conn)

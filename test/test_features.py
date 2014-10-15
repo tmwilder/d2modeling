@@ -30,20 +30,35 @@ class TestFeatures(utils.DatabaseTest, unittest.TestCase):
             actual.append(n_matches.as_tuple())
         self.assertEqual(expected, actual)
 
+    def test_ScoreDifferential(self):
+        utils.populate(session=self.session, team_names=list(string.lowercase))
+        self.transaction.commit()
+        expected = [
+            ('5_matches', 0.4794520547945205),
+            ('10_matches', 0.5818181818181818),
+            ('15_matches', 0.628),
+            ('20_matches', 0.5340314136125655),
+            ('25_matches', 0.515274949083503),
+            ('30_matches', 0.49597423510466987)
+        ]
+        actual = []
+        for x in range(5, 31, 5):
+            n_matches = features.KillPercentage(
+                name="{}_matches".format(x),
+                team_name="a",
+                n_matches=x,
+                conn=self.db_api_2_conn
+            )
+            actual.append(n_matches.as_tuple())
+        self.assertEqual(expected, actual)
+
     def test_DefaultFeatureSet(self):
         utils.populate(session=self.session, team_names=list(string.lowercase))
         self.transaction.commit()
         feature_set = features.DefaultFeatureSet(team_1="a", team_2="b", conn=self.db_api_2_conn)
         
-        expected = {
-            'last_15_matches_team_a': 0.26666666666666666,
-            'last_15_matches_team_b': 0.8666666666666667,
-            'last_5_matches_team_b': 0.8,
-            'last_5_matches_team_a': 0.6,
-            'last_10_matches_team_a': 0.3,
-            'last_10_matches_team_b': 0.8
-        }
-        self.assertEqual(expected, feature_set.as_dict())
+        result = feature_set.as_dict()
+        self.assertEqual(len(result.keys()), 32)
 
 
 if __name__ == "__main__":
