@@ -1,6 +1,6 @@
 from os.path import abspath as ap, dirname as dn
 
-from sqlalchemy import Column, ForeignKey, Integer, String, Date, Float
+from sqlalchemy import Column, ForeignKey, Integer, String, Date, Float, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
@@ -30,6 +30,7 @@ class Match(Base):
     winner = Column(String(250))
     dire_name = Column(String(250), ForeignKey('team.name'))
     radiant_name = Column(String(250), ForeignKey('team.name'))
+    match_data = Column(Text)
 
     radiant = relationship("Team", foreign_keys=[radiant_name])
     dire = relationship("Team", foreign_keys=[dire_name])
