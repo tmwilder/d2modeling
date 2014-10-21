@@ -1,3 +1,6 @@
+import json
+
+
 def get_match_row_dict(row):
     """ Given a tuple representing a row from the Match tables, return a dict. """
     return {
@@ -7,5 +10,6 @@ def get_match_row_dict(row):
         "date": row[3],
         "winner": row[4],
         "dire_name": row[5],
-        "radiant_name": row[6]
+        "radiant_name": row[6],
+        "match_data": json.loads(row[7])
     }
