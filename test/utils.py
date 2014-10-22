@@ -71,7 +71,8 @@ def populate(session,
                     date=random_date(),
                     winner=winners[random.randint(0, 1)],
                     dire_name=t1,
-                    radiant_name=t2
+                    radiant_name=t2,
+                    match_data="{}"
                 )
                 session.add(match)
                 id_count += 1

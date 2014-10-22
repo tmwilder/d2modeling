@@ -10,7 +10,7 @@ def update_all(conn=None, starting_elo=1200):
 
     cursor = conn.cursor()
 
-    matches = cursor.execute("select dire_score, radiant_score, time, date, winner, dire_name, radiant_name from match order by date asc").fetchall()
+    matches = cursor.execute("select dire_score, radiant_score, time, date, winner, dire_name, radiant_name, match_data from match order by date asc").fetchall()
 
     if matches:
         cursor.execute("update team set elo = ?", (starting_elo,))
