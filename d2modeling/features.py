@@ -32,6 +32,13 @@ class LastNMatchesFeature(Feature):
 
 class SteamMatchDataFeature(LastNMatchesFeature):
     """ Class provides a DRY way of parsing sides on steam API match data. """
+    def _construct(self, team_name, n_matches, conn=None):
+        super(SteamMatchDataFeature, self)._construct(team_name, n_matches, conn=conn)
+        for match in self.matches:
+            friendly_players, enemy_players = self._get_friendly_and_enemy_players(team_name, match)
+            match['friendly_average'] = self._get_team_wide_average(friendly_players)
+            match['enemy_average'] = self._get_team_wide_average(enemy_players)
+
     def _get_player_side_from_int(self, player_slot_int):
         """ The match data blob uses an 8 bit unsigned int to represent side/player slot.
             The first bit represents side.
@@ -110,17 +117,54 @@ class SteamMatchDataFeature(LastNMatchesFeature):
         return traits_to_average
 
 
-class GoldPerMinute(SteamMatchDataFeature):
-    def _construct(self, team_name, n_matches, conn=None):
-        super(GoldPerMinute, self)._construct(team_name, n_matches, conn)
-        gpms = []
+class PlayerAverageFeature(SteamMatchDataFeature):
+    def _construct(self, team_name, n_matches, trait, friendly_or_enemy, conn=None):
+        assert(friendly_or_enemy in  ["friendly_average", "enemy_average"])
+        super(PlayerAverageFeature, self)._construct(team_name, n_matches, conn)
+        data_points = []
         for match in self.matches:
-            friendly_players, _ = self._get_friendly_and_enemy_players(team_name, match)
-            friendly_average = self._get_team_wide_average(friendly_players)
-            gpms.append(friendly_average["gold_per_min"])
-        if len(gpms) == 0:
+            data_points.append(match[friendly_or_enemy][trait])
+        if len(data_points) == 0:
             return 0
-        return sum(gpms)/float(len(gpms))
+        return sum(data_points)/float(len(data_points))
+
+
+def get_all_player_average_features(team_name, n_matches, conn=None):
+    traits = [
+        "kills",
+        "deaths",
+        "assists",
+        "leaver_status",
+        "gold",
+        "last_hits",
+        "denies",
+        "gold_per_min",
+        "xp_per_min",
+        "gold_spent",
+        "hero_damage",
+        "tower_damage",
+        "hero_healing",
+        "level"
+    ]
+    all_features = []
+    for side in ["friendly_average", "enemy_average"]:
+        for trait in traits:
+            feature_name = "{}_player_{}_last_{}_team_{}".format(
+                side,
+                trait,
+                n_matches,
+                team_name
+            )
+            feature = PlayerAverageFeature(
+                name=feature_name,
+                team_name=team_name,
+                n_matches=n_matches,
+                trait=trait,
+                friendly_or_enemy=side,
+                conn=conn
+            )
+            all_features.append(feature)
+    return all_features
 
 
 class CurrentTeamElo(Feature):
@@ -204,35 +248,30 @@ class DefaultFeatureSet(FeatureSet):
         self.features = []
 
         for team_name in (team_1, team_2):
-            elo = CurrentTeamElo(
-                "team_{}_elo".format(team_name),
-                team_name=team_name
-            )
+            elo = CurrentTeamElo("team_{}_elo".format(team_name), team_name=team_name, conn=conn)
             self.features.append(elo)
 
+            last_n_features = {
+                'win_percentage_last_{}_team_{}': MatchWinLossPercentage,
+                'kill_percentage_last_{}_team_{}': KillPercentage,
+                'average_game_duration_last_{}_team_{}': AverageGameDuration,
+            }
+
             for x in range(5, 41, 5):
-                wlp = MatchWinLossPercentage(
-                    name='win_percentage_last_{}_team_{}'.format(x, team_name),
-                    team_name=team_name,
-                    n_matches=x,
-                    conn=conn
-                )
-                self.features.append(wlp)
+                for name, feature_class in last_n_features.items():
+                    feature = feature_class(
+                        name=name.format(x, team_name),
+                        team_name=team_name,
+                        n_matches=x,
+                        conn=conn
+                    )
+                    self.features.append(feature)
 
-                kp = KillPercentage(
-                    name='kill_percentage_last_{}_team_{}'.format(x, team_name),
+                player_averages = get_all_player_average_features(
                     team_name=team_name,
                     n_matches=x,
                     conn=conn
                 )
-                self.features.append(kp)
-
-                agd = AverageGameDuration(
-                    name='average_game_duration_last_{}_team_{}'.format(x, team_name),
-                    team_name=team_name,
-                    n_matches=x,
-                    conn=conn
-                )
-                self.features.append(agd)
+                self.features.extend(player_averages)
 
         super(DefaultFeatureSet, self).__init__(team_1, team_2, conn)

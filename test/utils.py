@@ -1,6 +1,8 @@
 import random
 import os
 import datetime
+import copy
+import json
 from datetime import timedelta
 import sqlite3
 
@@ -72,8 +74,33 @@ def populate(session,
                     winner=winners[random.randint(0, 1)],
                     dire_name=t1,
                     radiant_name=t2,
-                    match_data="{}"
+                    match_data=json.dumps({"players": _get_random_player_data()})
                 )
                 session.add(match)
                 id_count += 1
     session.commit()
+
+
+def _get_random_player_data():
+    players = []
+    for team in (0, 128):
+        for x in range(5):
+            traits = {
+                "kills": random.randint(1, 20),
+                "deaths": random.randint(1, 20),
+                "assists": random.randint(1, 20),
+                "leaver_status": random.randint(0, 5),
+                "gold": random.randint(1, 5000),
+                "last_hits": random.randint(1, 300),
+                "denies": random.randint(1, 100),
+                "gold_per_min": random.randint(1, 500),
+                "xp_per_min": random.randint(1, 500),
+                "gold_spent": random.randint(1, 15000),
+                "hero_damage": random.randint(1, 20000),
+                "tower_damage": random.randint(1, 5000),
+                "hero_healing": random.randint(1, 2000),
+                "level": random.randint(1, 18),
+            }
+            traits["player_slot"] = random.randint(0, 127) + team
+            players.append(traits)
+    return players

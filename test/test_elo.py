@@ -26,7 +26,7 @@ class TestElo(utils.DatabaseTest, unittest.TestCase):
 
         self.assertEqual(
             self.db_api_2_conn.execute("select * from team").fetchall(),
-            [(u'a', 1206.0), (u'b', 1227.0), (u'c', 1197.0), (u'd', 1181.0)]
+            [(u'a', 1231.0), (u'b', 1178.0), (u'c', 1231.0), (u'd', 1171.0)]
         )
 
 
