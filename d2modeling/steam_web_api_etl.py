@@ -2,6 +2,7 @@ import requests
 import json
 import copy
 import os
+import time
 
 from d2modeling.schema import Team, Match
 from d2modeling import SessionFactory
@@ -15,7 +16,7 @@ class SteamApiClient:
 
     def _get_key(self):
         key = os.environ.get("STEAM_KEY")
-        if key is None:
+        if not key:
             raise(ValueError("You must set the STEAM_KEY env variable."))
         return key
 
@@ -25,6 +26,7 @@ class SteamApiClient:
         return new_params
 
     def get_match_details(self, match_id):
+        time.sleep(1)
         url = self._get_api_url("GetMatchDetails")
         params = self._get_params({"match_id": match_id})
         r = requests.get(url, params=params)
@@ -32,6 +34,7 @@ class SteamApiClient:
         return json.loads(r.content), r.status_code
 
     def get_league_listing(self):
+        time.sleep(1)
         url = self._get_api_url("GetLeagueListing")
         params = self._get_params({})
         r = requests.get(url, params=params)

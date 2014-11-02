@@ -7,4 +7,5 @@ print("Getting match detail data...")
 
 print("Updating match elos...")
 d2modeling.elo.update_all()
+print("Match elos updated.")
 load_match_details(transform_match_details(extract_match_details()))

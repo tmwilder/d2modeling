@@ -1,6 +1,6 @@
 from os.path import abspath as ap, dirname as dn
 
-from sqlalchemy import Column, ForeignKey, Integer, String, Date, Float, Text
+from sqlalchemy import Column, ForeignKey, Integer, String, Date, Float, Text, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
@@ -36,3 +36,15 @@ class Match(Base):
 
     radiant = relationship("Team", foreign_keys=[radiant_name])
     dire = relationship("Team", foreign_keys=[dire_name])
+
+
+class BetMatch(Base):
+    __tablename__ = 'bet_match'
+    # TODO, make unique super key add add cron logic somewhere in app to get this data regularly.
+    id = Column("id", Integer, primary_key=True)
+    team_1_name = Column("team_2_name", String(250))
+    team_2_name = Column("team_1_name", String(250))
+    team_1_odds = Column("team_1_odds", Integer)
+    team_2_odds = Column("team_2_odds", Integer)
+    tournament = Column("tournament", String(250))
+    date_time = Column("date_time", DateTime())
