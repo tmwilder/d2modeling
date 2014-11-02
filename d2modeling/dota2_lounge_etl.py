@@ -60,7 +60,7 @@ def transform_bets_page(page_html):
 
 def _get_true_date_time(time_delta_phrase):
     time_number, time_unit, from_or_ago = re.match(
-        r"^(\d+)\s+(seconds{0,1}|minutes{0,1}|hours{0,1}|day{0,1})\s+(from|ago)$",
+        r"^(\d+)\s+(seconds{0,1}|minutes{0,1}|hours{0,1}|days{0,1})\s+(from|ago)$",
         time_delta_phrase
     ).groups()
     time_number = int(time_number)
