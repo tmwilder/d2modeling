@@ -7,12 +7,12 @@ class Feature:
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, name, *args, **kwargs):
+    def __init__(self, name, last_date, *args, **kwargs):
         self.name = name
-        self.value = self._construct(*args, **kwargs)
+        self.value = self._construct(last_date, *args, **kwargs)
 
     @abstractmethod
-    def _construct(self, *args, **kwargs):
+    def _construct(self, last_date, *args, **kwargs):
         """ Loads data for the feature. """
         pass
 
@@ -34,7 +34,7 @@ class FeatureSet:
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def __init__(self, team_1, team_2, conn):
+    def __init__(self, last_date, team_1, team_2, conn):
         # Subclasses define self.features in their constructors.
         for feature in self.features:
             assert(isinstance(feature, Feature))

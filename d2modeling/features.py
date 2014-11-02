@@ -4,27 +4,28 @@ from d2modeling import get_dbapi2_conn
 
 
 class LastNMatchesFeature(Feature):
-    def _construct(self, team_name, n_matches, conn=None):
-        self._load_matches(team_name, n_matches, conn)
+    def _construct(self, last_date, team_name, n_matches, conn=None):
+        self._load_matches(last_date, team_name, n_matches, conn)
 
-    def _load_matches(self, team_name, n_matches, conn=None):
+    def _load_matches(self, last_date, team_name, n_matches, conn=None):
         if conn is None:
             conn = get_dbapi2_conn()
         cursor = conn.cursor()
         sql = (
         "SELECT "
-            "dire_score, radiant_score, time, date, winner, dire_name, radiant_name, match_data "
+            "* "
         "FROM "
             "match "
         "WHERE "
             "dire_name = ? or "
-            "radiant_name = ? "
+            "radiant_name = ? and "
+            "date < ?"
         "ORDER BY "
             "date desc "
         "LIMIT "
             "? "
         )
-        data = (team_name, team_name, n_matches)
+        data = (team_name, team_name, last_date, n_matches)
         cursor.execute(sql, data)
         rows = cursor.fetchall()
         self.matches = [get_match_row_dict(row) for row in rows]
@@ -32,8 +33,8 @@ class LastNMatchesFeature(Feature):
 
 class SteamMatchDataFeature(LastNMatchesFeature):
     """ Class provides a DRY way of parsing sides on steam API match data. """
-    def _construct(self, team_name, n_matches, conn=None):
-        super(SteamMatchDataFeature, self)._construct(team_name, n_matches, conn=conn)
+    def _construct(self, last_date, team_name, n_matches, conn=None):
+        super(SteamMatchDataFeature, self)._construct(last_date, team_name, n_matches, conn=conn)
         for match in self.matches:
             friendly_players, enemy_players = self._get_friendly_and_enemy_players(team_name, match)
             match['friendly_average'] = self._get_team_wide_average(friendly_players)
@@ -118,9 +119,9 @@ class SteamMatchDataFeature(LastNMatchesFeature):
 
 
 class PlayerAverageFeature(SteamMatchDataFeature):
-    def _construct(self, team_name, n_matches, trait, friendly_or_enemy, conn=None):
+    def _construct(self, laste_date, team_name, n_matches, trait, friendly_or_enemy, conn=None):
         assert(friendly_or_enemy in  ["friendly_average", "enemy_average"])
-        super(PlayerAverageFeature, self)._construct(team_name, n_matches, conn)
+        super(PlayerAverageFeature, self)._construct(laste_date, team_name, n_matches, conn)
         data_points = []
         for match in self.matches:
             data_points.append(match[friendly_or_enemy][trait])
@@ -129,7 +130,7 @@ class PlayerAverageFeature(SteamMatchDataFeature):
         return sum(data_points)/float(len(data_points))
 
 
-def get_all_player_average_features(team_name, n_matches, conn=None):
+def get_all_player_average_features(last_date, team_name, n_matches, conn=None):
     traits = [
         "kills",
         "deaths",
@@ -157,6 +158,7 @@ def get_all_player_average_features(team_name, n_matches, conn=None):
             )
             feature = PlayerAverageFeature(
                 name=feature_name,
+                last_date=last_date,
                 team_name=team_name,
                 n_matches=n_matches,
                 trait=trait,
@@ -168,19 +170,28 @@ def get_all_player_average_features(team_name, n_matches, conn=None):
 
 
 class CurrentTeamElo(Feature):
-    def _construct(self, team_name, conn=None):
+    def _construct(self, last_date, team_name, conn=None):
         if conn is None:
             conn = get_dbapi2_conn()
         cursor = conn.cursor()
-        elo_query = "select elo from team where name = ?"
-        cursor.execute(elo_query, (team_name,))
+        elo_query = (
+            "SELECT "
+                "CASE WHEN radiant_name = ? THEN radiant_elo ELSE dire_elo END "
+            "FROM match "
+            "WHERE "
+                "date <= ?"
+            "ORDER BY "
+                "date, time "
+            "LIMIT 1"
+        )
+        cursor.execute(elo_query, (team_name, last_date))
         elo = cursor.fetchall()[0][0]
         return elo
 
 
 class MatchWinLossPercentage(LastNMatchesFeature):
-    def _construct(self, team_name, n_matches, conn=None):
-        super(MatchWinLossPercentage, self)._construct(team_name, n_matches, conn)
+    def _construct(self, last_date, team_name, n_matches, conn=None):
+        super(MatchWinLossPercentage, self)._construct(last_date, team_name, n_matches, conn)
 
         wins = 0
         losses = 0
@@ -202,8 +213,8 @@ class MatchWinLossPercentage(LastNMatchesFeature):
 
 
 class KillPercentage(LastNMatchesFeature):
-    def _construct(self, team_name, n_matches, conn=None):
-        super(KillPercentage, self)._construct(team_name, n_matches, conn)
+    def _construct(self, last_date, team_name, n_matches, conn=None):
+        super(KillPercentage, self)._construct(last_date, team_name, n_matches, conn)
 
         kills = 0
         deaths = 0
@@ -231,8 +242,8 @@ class KillPercentage(LastNMatchesFeature):
 
 
 class AverageGameDuration(LastNMatchesFeature):
-    def _construct(self, team_name, n_matches, conn=None):
-        super(AverageGameDuration, self)._construct(team_name, n_matches, conn)
+    def _construct(self, last_date, team_name, n_matches, conn=None):
+        super(AverageGameDuration, self)._construct(last_date, team_name, n_matches, conn)
 
         matches = len(self.matches)
         time = 0.0
@@ -244,11 +255,11 @@ class AverageGameDuration(LastNMatchesFeature):
 
 
 class DefaultFeatureSet(FeatureSet):
-    def __init__(self, team_1, team_2, conn):
+    def __init__(self, last_date, team_1, team_2, conn, matches_back=10, increment=5):
         self.features = []
 
         for team_name in (team_1, team_2):
-            elo = CurrentTeamElo("team_{}_elo".format(team_name), team_name=team_name, conn=conn)
+            elo = CurrentTeamElo("team_{}_elo".format(team_name), last_date=last_date, team_name=team_name, conn=conn)
             self.features.append(elo)
 
             last_n_features = {
@@ -257,10 +268,11 @@ class DefaultFeatureSet(FeatureSet):
                 'average_game_duration_last_{}_team_{}': AverageGameDuration,
             }
 
-            for x in range(5, 41, 5):
+            for x in range(increment, matches_back+1, increment):
                 for name, feature_class in last_n_features.items():
                     feature = feature_class(
                         name=name.format(x, team_name),
+                        last_date=last_date,
                         team_name=team_name,
                         n_matches=x,
                         conn=conn
@@ -268,10 +280,11 @@ class DefaultFeatureSet(FeatureSet):
                     self.features.append(feature)
 
                 player_averages = get_all_player_average_features(
+                    last_date=last_date,
                     team_name=team_name,
                     n_matches=x,
                     conn=conn
                 )
                 self.features.extend(player_averages)
 
-        super(DefaultFeatureSet, self).__init__(team_1, team_2, conn)
+        super(DefaultFeatureSet, self).__init__(last_date, team_1, team_2, conn)

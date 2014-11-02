@@ -15,6 +15,7 @@ class TestFeatures(utils.DatabaseTest, unittest.TestCase):
         for x in range(5, 31, 5):
             n_matches = features.MatchWinLossPercentage(
                 name="{}_matches".format(x),
+                last_date="2014-10-01",
                 team_name="a",
                 n_matches=x,
                 conn=self.db_api_2_conn
@@ -30,6 +31,7 @@ class TestFeatures(utils.DatabaseTest, unittest.TestCase):
         for x in range(5, 31, 5):
             n_matches = features.KillPercentage(
                 name="{}_matches".format(x),
+                last_date="2014-10-01",
                 team_name="a",
                 n_matches=x,
                 conn=self.db_api_2_conn
@@ -42,11 +44,13 @@ class TestFeatures(utils.DatabaseTest, unittest.TestCase):
         self.transaction.commit()
         elo_a = features.CurrentTeamElo(
             name="team_{}_elo".format("a"),
+            last_date="2014-10-01",
             team_name="a",
             conn=self.db_api_2_conn
         )
         elo_b = features.CurrentTeamElo(
             name="team_{}_elo".format("b"),
+            last_date="2014-10-01",
             team_name="b",
             conn=self.db_api_2_conn
         )
@@ -55,15 +59,17 @@ class TestFeatures(utils.DatabaseTest, unittest.TestCase):
         
         elo_a2 = features.CurrentTeamElo(
             name="team_{}_elo".format("a"),
+            last_date="2014-10-01",
             team_name="a",
             conn=self.db_api_2_conn
         )
         elo_b2 = features.CurrentTeamElo(
             name="team_{}_elo".format("b"),
+            last_date="2014-10-01",
             team_name="b",
             conn=self.db_api_2_conn
         )
-        self.assertEqual((elo_a2.as_value(), elo_b2.as_value()), (1171.0, 1179.0))
+        self.assertEqual((elo_a2.as_value(), elo_b2.as_value()), (1216, 1216))
 
     def test_AverageGameDuration(self):
         utils.populate(session=self.session, team_names=list(string.lowercase))
@@ -73,6 +79,7 @@ class TestFeatures(utils.DatabaseTest, unittest.TestCase):
         for x in range(5, 31, 5):
             n_matches = features.AverageGameDuration(
                 name="{}_matches".format(x),
+                last_date="2014-10-01",
                 team_name="a",
                 n_matches=x,
                 conn=self.db_api_2_conn
@@ -84,12 +91,18 @@ class TestFeatures(utils.DatabaseTest, unittest.TestCase):
         utils.populate(session=self.session, team_names=list(string.lowercase))
         self.transaction.commit()
 
-        feature_set = features.DefaultFeatureSet(team_1="a", team_2="b", conn=self.db_api_2_conn)
-
-        self.assertEqual(len(feature_set.as_dict().keys()), 498)
+        feature_set = features.DefaultFeatureSet(
+            last_date="2014-10-01",
+            team_1="a",
+            team_2="b",
+            conn=self.db_api_2_conn,
+            matches_back=4,
+            increment=2
+        )
+        self.assertEqual(len(feature_set.as_dict().keys()), 126)
         self.assertEqual(type(feature_set.as_dict()), dict)
         self.assertEqual(type(feature_set.as_values()), list)
-        self.assertEqual(len(feature_set.as_values()), 498)
+        self.assertEqual(len(feature_set.as_values()), 126)
 
 
 if __name__ == "__main__":

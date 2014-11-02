@@ -29,6 +29,23 @@ class TestElo(utils.DatabaseTest, unittest.TestCase):
             [(u'a', 1231.0), (u'b', 1178.0), (u'c', 1231.0), (u'd', 1171.0)]
         )
 
+        self.assertEqual(
+            self.db_api_2_conn.execute("select radiant_elo, dire_elo from match").fetchall(),
+            [(1187, 1183),
+             (1198, 1201),
+             (1203, 1218),
+             (1248, 1174),
+             (1213, 1160),
+             (1171, 1178),
+             (1231, 1231),
+             (1184, 1216),
+             (1219, 1215),
+             (1234, 1188),
+             (1169, 1201),
+             (1232, 1185)
+            ]
+        )
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=3)
