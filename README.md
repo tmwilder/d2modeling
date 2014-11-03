@@ -3,6 +3,6 @@
 ```bash
 cd /path/to/d2modeling/
 pip install -e .
-python bin/instantiate_db.py
+alembic upgrade head
 python bin/refresh_data.py
 ```

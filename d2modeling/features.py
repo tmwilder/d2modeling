@@ -207,6 +207,10 @@ class MatchWinLossPercentage(LastNMatchesFeature):
             else:
                 losses += 1
 
+        if not (wins or losses):
+            # Assign a bad winrate if they have no matches.
+            return 0.2
+
         percentage = float(wins)/(wins + losses)
         # If we run into memory problems, we can call del self.matches here. Not doing now for debug reasons.
         return percentage
@@ -234,7 +238,7 @@ class KillPercentage(LastNMatchesFeature):
                 deaths += dire_score
 
         if kills + deaths == 0:
-            kills_over_kill_deaths = 1
+            kills_over_kill_deaths = .5
         else:
             kills_over_kill_deaths = float(kills)/(kills + deaths)
 
@@ -250,6 +254,9 @@ class AverageGameDuration(LastNMatchesFeature):
 
         for match in self.matches:
             time += match["time"]
+
+        if matches == 0:
+            return 2000
 
         return  time/matches
 
