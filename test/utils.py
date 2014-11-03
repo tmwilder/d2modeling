@@ -19,7 +19,7 @@ class DatabaseTest(object):
 
     """
     def setUp(self):
-        self.db_path = 'd2modeling.db'
+        self.db_path = 'd2modeling_test.db'
         self.engine = create_engine('sqlite:///{}'.format(self.db_path))
         schema.Base.metadata.bind = self.engine
         self.connection = self.engine.connect()

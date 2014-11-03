@@ -3,6 +3,7 @@ import json
 import copy
 import os
 import time
+import traceback
 
 from d2modeling.schema import Team, Match
 from d2modeling import SessionFactory
@@ -56,8 +57,12 @@ def extract_match_details():
         details = []
         for index, match_id in enumerate(results):
             print("Retrieving from Steam API result #: {} match_id: {}".format(index + 1, match_id[0]))
-            detail = client.get_match_details(match_id)
-            details.append(detail)
+            try:
+                detail = client.get_match_details(match_id)
+                details.append(detail)
+            except Exception as e:
+                print "Error accessing steam web api: {}".format(e)
+                traceback.print_stack()
         return details
 
 

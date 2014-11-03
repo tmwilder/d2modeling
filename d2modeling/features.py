@@ -33,12 +33,12 @@ class LastNMatchesFeature(Feature):
 
 class SteamMatchDataFeature(LastNMatchesFeature):
     """ Class provides a DRY way of parsing sides on steam API match data. """
-    def _construct(self, last_date, team_name, n_matches, conn=None):
+    def _construct(self, last_date, team_name, n_matches, trait, conn=None,):
         super(SteamMatchDataFeature, self)._construct(last_date, team_name, n_matches, conn=conn)
         for match in self.matches:
             friendly_players, enemy_players = self._get_friendly_and_enemy_players(team_name, match)
-            match['friendly_average'] = self._get_team_wide_average(friendly_players)
-            match['enemy_average'] = self._get_team_wide_average(enemy_players)
+            match['friendly_average'] = self._get_team_wide_average(friendly_players, trait)
+            match['enemy_average'] = self._get_team_wide_average(enemy_players, trait)
 
     def _get_player_side_from_int(self, player_slot_int):
         """ The match data blob uses an 8 bit unsigned int to represent side/player slot.
@@ -84,47 +84,30 @@ class SteamMatchDataFeature(LastNMatchesFeature):
 
         return friendly_players, enemy_players
 
-    def _get_team_wide_average(self, players):
-        traits_to_average = {
-            "kills": [],
-            "deaths": [],
-            "assists": [],
-            "leaver_status": [],
-            "gold": [],
-            "last_hits": [],
-            "denies": [],
-            "gold_per_min": [],
-            "xp_per_min": [],
-            "gold_spent": [],
-            "hero_damage": [],
-            "tower_damage": [],
-            "hero_healing": [],
-            "level": []
-        }
+    def _get_team_wide_average(self, players, trait):
+        values = []
         for player in players:
-            for key in traits_to_average.keys():
-                if key == "leaver_status":
-                    # Special case, status indicates if abandoned game, 0 or 1 == !abandoned.
-                    if player[key] in (0, 1):
-                        status = 0
-                    else:
-                        status = 1
-                    traits_to_average["leaver_status"].append(status)
-                    continue
-                traits_to_average[key].append(player[key])
+            if trait == "leaver_status":
+                # Special case, status indicates if abandoned game, 0 or 1 == !abandoned.
+                if player[trait] in (0, 1):
+                    status = 0
+                else:
+                    status = 1
+                values.append(status)
+                continue
+            values.append(player[trait])
 
-        for key, value in traits_to_average.items():
-            traits_to_average[key] = sum(value)/5.0
-        return traits_to_average
+        average = sum(values)/5.0
+        return average
 
 
 class PlayerAverageFeature(SteamMatchDataFeature):
-    def _construct(self, laste_date, team_name, n_matches, trait, friendly_or_enemy, conn=None):
+    def _construct(self, last_date, team_name, n_matches, trait, friendly_or_enemy, conn=None):
         assert(friendly_or_enemy in  ["friendly_average", "enemy_average"])
-        super(PlayerAverageFeature, self)._construct(laste_date, team_name, n_matches, conn)
+        super(PlayerAverageFeature, self)._construct(last_date, team_name, n_matches, trait, conn)
         data_points = []
         for match in self.matches:
-            data_points.append(match[friendly_or_enemy][trait])
+            data_points.append(match[friendly_or_enemy])
         if len(data_points) == 0:
             return 0
         return sum(data_points)/float(len(data_points))

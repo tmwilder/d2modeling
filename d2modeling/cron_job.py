@@ -17,7 +17,7 @@ def setup_cron():
 
     job = cron.new(command=cmd, comment="Poll dota lounge for new match betting data.")
 
-    job.minute.every(1)
+    job.every(2).hour()
     job.enable()
 
     cron.write()
