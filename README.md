@@ -5,4 +5,5 @@ cd /path/to/d2modeling/
 pip install -e .
 alembic upgrade head
 python bin/refresh_data.py
+python bin/setup_crontab.py
 ```
