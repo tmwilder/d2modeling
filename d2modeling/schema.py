@@ -48,3 +48,4 @@ class BetMatch(Base):
     team_2_odds = Column("team_2_odds", Integer)
     tournament = Column("tournament", String(250))
     date_time = Column("date_time", DateTime())
+    current_date_time = Column("current_date_time", DateTime())

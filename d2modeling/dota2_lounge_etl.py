@@ -26,7 +26,7 @@ def transform_bets_page(page_html):
     matches = soup.findAll("div", {"class": "matchmain"})
     
     team_regex = re.compile(r"^(.*?)(\d{1,2})%$")
-    time_delta_regex = re.compile(r"\r\n\s+(\d+ [^\s]+ [^\s]+)\s+.*")
+    time_delta_regex = re.compile(r"(?:\r\n){0,1}\s*(\d+ [^\s]+ [^\s]+).*")
 
     parsed_matches = []
 
@@ -42,7 +42,8 @@ def transform_bets_page(page_html):
         match_data = match.findAll("div", {"class": "whenm"})
         time_delta_phrase = re.match(time_delta_regex, match_data[0].text).groups(0)[0]
         true_date_time = _get_true_date_time(time_delta_phrase)
-        tournament_name = match_data[1].text.strip("\r\n ")
+
+        tournament_name = match.find("div", {"class": "eventm"}).text.strip("\r\n ")
 
         match_data = {
             "tournament": tournament_name,
@@ -50,7 +51,8 @@ def transform_bets_page(page_html):
             "team_1_odds": teams[0]["odds"],
             "team_2_name": teams[1]["team_name"],
             "team_2_odds": teams[1]["odds"],
-            "date_time": true_date_time
+            "date_time": true_date_time,
+            "current_date_time": datetime.datetime.now()
         }
 
         parsed_matches.append(match_data)
@@ -60,7 +62,7 @@ def transform_bets_page(page_html):
 
 def _get_true_date_time(time_delta_phrase):
     time_number, time_unit, from_or_ago = re.match(
-        r"^(\d+)\s+(seconds{0,1}|minutes{0,1}|hours{0,1}|days{0,1})\s+(from|ago)$",
+        r"^(\d+)\s+(seconds{0,1}|minutes{0,1}|hours{0,1}|days{0,1})\s+(from|ago).*",
         time_delta_phrase
     ).groups()
     time_number = int(time_number)
@@ -106,7 +108,8 @@ def load_match(session, match, count=None):
         team_1_odds=match["team_1_odds"],
         team_2_odds=match["team_2_odds"],
         tournament=match["tournament"],
-        date_time=match["date_time"]
+        date_time=match["date_time"],
+        current_date_time=match["current_date_time"]
     )
     session.add(match_obj)
     session.commit()
